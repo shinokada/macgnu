@@ -1,0 +1,147 @@
+#!/bin/bash
+set -euo pipefail
+
+macgnu_check_os() {
+    if ! [[ "$OSTYPE" =~ darwin* ]]; then
+        echo "This is meant to be run on macOS only"
+        exit
+    fi
+}
+
+macgnu_check_brew() {
+    if ! command -v brew >/dev/null; then
+        echo "Homebrew not installed!"
+        echo "In order to use this script please install homebrew from https://brew.sh"
+        exit
+    fi
+}
+
+macgnu_check_dirs() {
+    result=0
+
+    for dir in /usr/local/bin /usr/local/sbin; do
+        if [[ ! -d $dir || ! -w $dir ]]; then
+            echo "$dir must exist and be writeable"
+            result=1
+        fi
+    done
+
+    return $result
+}
+
+macgnu_formulas=(
+    # GNU programs non-existing in macOS
+    "watch"
+    "wget"
+    "wdiff"
+    "gdb"
+    "autoconf"
+
+    # GNU programs whose BSD counterpart is installed in macOS
+    "coreutils"
+    "binutils"
+    "diffutils"
+    "ed"
+    "findutils"
+    "gawk"
+    "gnu-indent"
+    "gnu-sed"
+    "gnu-tar"
+    "gnu-which"
+    "grep"
+    "gzip"
+    "screen"
+
+    # GNU programs existing in macOS which are outdated
+    "bash"
+    "emacs"
+    "gpatch"
+    "less"
+    "m4"
+    "make"
+    "nano"
+    "bison"
+
+    # BSD programs existing in macOS which are outdated
+    "flex"
+)
+
+macgnu_install() {
+    macgnu_check_os
+    macgnu_check_brew
+    macgnu_check_dirs
+
+    # Install all formulas
+    for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
+        if ! brew ls --versions "${macgnu_formulas[i]}" >/dev/null; then
+            brew install "${macgnu_formulas[i]}" || continue
+        fi
+    done
+
+    # gdb requires special privileges to access Mach ports.
+    # One can either codesign the binary as per https://sourceware.org/gdb/wiki/BuildingOnDarwin
+    # Or, on 10.12 Sierra or later with SIP, declare `set startup-with-shell off` in `~/.gdbinit`:
+    grep -qF 'set startup-with-shell off' ~/.gdbinit || echo 'set startup-with-shell off' | tee -a ~/.gdbinit >/dev/null
+
+    # Make changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
+    cp .macgnu ~/.macgnu
+    echo "Add '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+}
+
+macgnu_uninstall() {
+    macgnu_check_os
+    macgnu_check_brew
+
+    # Remove gdb fix
+    [ -f ~/.gdbinit ] && sed -i.bak '/set startup-with-shell off/d' ~/.gdbinit && rm ~/.gdbinit.bak
+
+    # Uninstall all formulas in reverse order
+    for ((i = ${#macgnu_formulas[@]} - 1; i >= 0; i--)); do
+        if [[ ${macgnu_formulas[i]} != bash ]]; then
+            brew uninstall -f "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)" || continue
+        fi
+    done
+
+    # Remove changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
+    rm -f ~/.macgnu
+    echo "Remove '. ~/.macgnu' from your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+}
+
+macgnu_info() {
+    macgnu_check_os
+    macgnu_check_brew
+
+    for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
+        brew info "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)"
+        printf "\n\n========================\n\n"
+    done
+}
+
+macgnu_help() {
+    echo "usage: macgnu [-h] [command]"
+    echo ""
+    echo "valid commands:"
+    echo "  install    install GNU/Linux utilities"
+    echo "  uninstall  uninstall GNU/Linux utilities"
+    echo "  info       show info on GNU/Linux utilities"
+    echo ""
+    echo "optional arguments:"
+    echo "  -h, --help  show this help message and exit"
+}
+
+macgnu_main() {
+    if [ $# -eq 1 ]; then
+        case $1 in
+        "install") macgnu_install ;;
+        "uninstall") macgnu_uninstall ;;
+        "info") macgnu_info ;;
+        "-h") macgnu_help ;;
+        "--help") macgnu_help ;;
+        esac
+    else
+        macgnu_help
+        exit
+    fi
+}
+
+macgnu_main "$@"
