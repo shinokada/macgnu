@@ -57,11 +57,27 @@ Remove the following from `~/.zshrc` and `~/.bashrc`.
 
 ## How to change to bash
 
+You may want to change from ZSH to Bash and vice versa:
+
 ```terminal
+# from ZSH to Bash
 $ which -a bash
 /usr/local/bin/bash
 /bin/bash
 $ chsh -s /usr/local/bin/bash
+Changing shell for shinokada.
+Password for shinokada:
+# Open a new tab or restart your terminal
 $ which bash
 /usr/local/bin/bash
+```
+
+```terminal
+# from Bash to ZSH
+$ which -a zsh
+/bin/zsh
+$ chsh -s /bin/zsh
+Changing shell for shinokada.
+Password for shinokada:
+# Open a new tab or restart your terminal
 ```
