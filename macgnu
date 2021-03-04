@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# https://gist.github.com/mohanpedala/1e2ff5661761d3abd0385e8223e16425
+# set -e The set -e option instructs bash to immediately exit if any command [1] has a non-zero exit status.
+# the -u option, the script exits with an exit code of 1, when a variable is not defined.
+# set -o pipefail This setting prevents errors in a pipeline from being masked.
 set -euo pipefail
 
 macgnu_check_os() {
@@ -74,7 +79,7 @@ macgnu_install() {
     # Install all formulas
     for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
         if ! brew ls --versions "${macgnu_formulas[i]}" >/dev/null; then
-            brew install "${macgnu_formulas[i]}" || continue
+            brew install "${macgnu_formulas[i]}"
         fi
     done
 
@@ -98,7 +103,7 @@ macgnu_uninstall() {
     # Uninstall all formulas in reverse order
     for ((i = ${#macgnu_formulas[@]} - 1; i >= 0; i--)); do
         if [[ ${macgnu_formulas[i]} != bash ]]; then
-            brew uninstall -f "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)" || continue
+            brew uninstall -f "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)"
         fi
     done
 
