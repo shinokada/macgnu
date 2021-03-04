@@ -2,7 +2,7 @@
 
 Macgnu is a [linuxify](https://github.com/fabiomaia/linuxify) alternative.
 
-If you want to linuxify your macOS core command, but you may not want to install `libressl, file-formula, git, openssh, perl, python, rsync, unzip, vim` because you already installed them. Then this is for you.
+If you want to linuxify your macOS core commands, but you may not want to install `libressl, file-formula, git, openssh, perl, python, rsync, unzip, vim` because you have already installed them. Then this is for you.
 
 The macgnu is built on [linuxify](https://github.com/fabiomaia/linuxify):
 
@@ -53,4 +53,15 @@ Remove the following from `~/.zshrc` and `~/.bashrc`.
 
 ```zsh
 . ~/.macgnu
+```
+
+## How to change to bash
+
+```terminal
+$ which -a bash
+/usr/local/bin/bash
+/bin/bash
+$ chsh -s /usr/local/bin/bash
+$ which bash
+/usr/local/bin/bash
 ```
