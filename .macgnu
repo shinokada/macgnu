@@ -1,6 +1,4 @@
 # most programs
-export PATH="/usr/local/bin:$PATH"
-export MANPATH="/usr/local/share/man:$MANPATH"
 export INFOPATH="/usr/local/share/info:$INFOPATH"
 
 # coreutils
