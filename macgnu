@@ -36,6 +36,7 @@ macgnu_check_dirs() {
 
 macgnu_formulas=(
     # GNU programs non-existing in macOS
+    "tree"
     "watch"
     "wget"
     "wdiff"
