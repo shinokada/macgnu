@@ -1,10 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# https://gist.github.com/mohanpedala/1e2ff5661761d3abd0385e8223e16425
-# set -e The set -e option instructs bash to immediately exit if any command [1] has a non-zero exit status.
-# the -u option, the script exits with an exit code of 1, when a variable is not defined.
-# set -o pipefail This setting prevents errors in a pipeline from being masked.
+# The set -e option instructs bash to immediately exit if any command has a non-zero exit status.
+# the -u option setting exits the script with an exit code of 1, when a variable is not defined.
+# set -o pipefail setting prevents errors in a pipeline from being masked.
 set -euo pipefail
+
+version="0.1.0"
+######### functions ###########
 
 macgnu_check_os() {
     if ! [[ "$OSTYPE" =~ darwin* ]]; then
@@ -23,16 +25,16 @@ macgnu_check_brew() {
 
 macgnu_check_dirs() {
     result=0
-
     for dir in /usr/local/bin /usr/local/sbin; do
         if [[ ! -d $dir || ! -w $dir ]]; then
             echo "$dir must exist and be writeable"
             result=1
         fi
     done
-
     return $result
 }
+
+#################
 
 macgnu_formulas=(
     # GNU programs non-existing in macOS
@@ -124,15 +126,34 @@ macgnu_info() {
 }
 
 macgnu_help() {
-    echo "usage: macgnu [-h] [command]"
-    echo ""
-    echo "valid commands:"
-    echo "  install    install GNU/Linux utilities"
-    echo "  uninstall  uninstall GNU/Linux utilities"
-    echo "  info       show info on GNU/Linux utilities"
-    echo ""
-    echo "optional arguments:"
-    echo "  -h, --help  show this help message and exit"
+    cat <<EOF
+Description: Macgnu transforms the macOS CLI into 
+GNU/Linux by installing GNU programs.
+
+Usage: macgnu [-h] [command]
+    install    install GNU/Linux utilities
+    uninstall  uninstall GNU/Linux utilities
+    info       show info on GNU/Linux utilities
+    -h, --help  show this help message and exit"
+
+Examples:
+    Install GNUs
+    macgnu install
+
+    Uninstall GNUs
+    macgnu uninstall
+
+    Show GNU info
+    macgnu info
+
+    Show this help
+    macgnu -h
+EOF
+    echo
+    echo "GNU programs to be installed: "
+    for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
+        echo "${macgnu_formulas[i]}"
+    done | column
 }
 
 macgnu_main() {
