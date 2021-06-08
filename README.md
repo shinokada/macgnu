@@ -17,7 +17,18 @@ Macgnu :
 - won't install `libressl, file-formula, git, openssh, perl, python, rsync, unzip, vim`
 - won't ask if you want to change your shell to the latest bash.
 
-## Install
+## Installing GNU
+
+### [Awesome package manager]
+
+After installing [Awesome package manager](https://github.com/shinokada/awesome):
+
+```sh
+awesome -i shinokada/macgnu
+macgnu install
+```
+
+### Download/Clone
 
 ```bash
 git clone https://github.com/shinokada/macgnu.git
@@ -43,9 +54,9 @@ If you are using iTerm you may need to add following to `~/.bash_profile`:
 . ~/.bashrc
 ```
 
-## Uninstall
+## Uninstalling GNU
 
-```bash
+```sh
 ./macgnu uninstall
 ```
 
