@@ -17,9 +17,7 @@ Macgnu :
 - won't install `libressl, file-formula, git, openssh, perl, python, rsync, unzip, vim`
 - won't ask if you want to change your shell to the latest bash.
 
-## Installing MacGNU
-
-### Awesome package manager
+## Installing MacGNU with Awesome package manager
 
 After installing [Awesome package manager](https://github.com/shinokada/awesome):
 
@@ -27,7 +25,7 @@ After installing [Awesome package manager](https://github.com/shinokada/awesome)
 awesome install shinokada/macgnu
 ```
 
-### Install GNUs
+## Install GNUs
 
 ```bash
 macgnu install
