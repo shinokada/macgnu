@@ -5,7 +5,7 @@
 # set -o pipefail setting prevents errors in a pipeline from being masked.
 set -euo pipefail
 
-version="0.2.0"
+version="0.2.1"
 ######### functions ###########
 
 macgnu_check_os() {
@@ -130,12 +130,12 @@ macgnu_help() {
 Description: Macgnu transforms the macOS CLI into 
 GNU/Linux by installing GNU programs.
 
-Usage: macgnu [-h] [command]
-    install       installs GNU/Linux utilities
-    uninstall     uninstalls GNU/Linux utilities
-    info          shows info on GNU/Linux utilities
-    -h, --help    shows this help message and exit"
-    -v, --version shows the version
+Usage and options: macgnu [command | -h | -v]
+    install        installs GNU/Linux utilities
+    uninstall      uninstalls GNU/Linux utilities
+    info           shows info on GNU/Linux utilities
+    -h, --help     shows this help message and exit"
+    -v, --version  shows the version
 
 Examples:
     Install GNUs

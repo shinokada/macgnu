@@ -1,4 +1,4 @@
-# Macgnu
+# MacGNU
 
 Macgnu is a [linuxify](https://github.com/fabiomaia/linuxify) alternative.
 
@@ -17,26 +17,23 @@ Macgnu :
 - won't install `libressl, file-formula, git, openssh, perl, python, rsync, unzip, vim`
 - won't ask if you want to change your shell to the latest bash.
 
-## Installing GNU
+## Installing MacGNU
 
-### [Awesome package manager]
+### Awesome package manager
 
 After installing [Awesome package manager](https://github.com/shinokada/awesome):
 
 ```sh
-awesome -i shinokada/macgnu
+awesome install shinokada/macgnu
+```
+
+### Install GNUs
+
+```bash
 macgnu install
 ```
 
-### Download/Clone
-
-```bash
-git clone https://github.com/shinokada/macgnu.git
-cd macgnu/
-./macgnu install
-```
-
-Add following to `~/.zshrc` and `~/.bashrc`
+After installation, add following to your terminal configuration `~/.zshrc` or `~/.bashrc`
 
 ```zsh
 # ~/.zshrc
@@ -54,10 +51,10 @@ If you are using iTerm you may need to add following to `~/.bash_profile`:
 . ~/.bashrc
 ```
 
-## Uninstalling GNU
+## Uninstalling GNUs
 
 ```sh
-./macgnu uninstall
+macgnu uninstall
 ```
 
 Remove the following from `~/.zshrc` and `~/.bashrc`.
