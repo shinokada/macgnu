@@ -88,6 +88,47 @@ Password for shinokada:
 # Open a new tab or restart your terminal
 ```
 
+## List of packages installed
+
+### GNU programs non-existing in macOS
+
+- tree
+- watch
+- wget
+- wdiff
+- autoconf
+
+### GNU programs whose BSD counterpart is installed in macOS
+
+- coreutils
+- binutils
+- diffutils
+- ed
+- findutils
+- gawk
+- gnu-indent
+- gnu-sed
+- gnu-tar
+- gnu-which
+- grep
+- gzip
+- screen
+
+### GNU programs existing in macOS which are outdated
+
+- bash
+- emacs
+- gpatch
+- less
+- m4
+- make
+- nano
+- bison
+
+### BSD programs existing in macOS which are outdated
+
+- flex
+
 ## License
 
 MIT License
