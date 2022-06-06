@@ -5,7 +5,7 @@
 # set -o pipefail setting prevents errors in a pipeline from being masked.
 set -euo pipefail
 
-version="0.2.1"
+version="0.2.2"
 ######### functions ###########
 
 macgnu_check_os() {
@@ -42,7 +42,7 @@ macgnu_formulas=(
     "watch"
     "wget"
     "wdiff"
-    "gdb"
+    # "gdb" # not M1 chip compatible
     "autoconf"
 
     # GNU programs whose BSD counterpart is installed in macOS
