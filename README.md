@@ -1,4 +1,13 @@
-# MacGNU
+<h1 align="center">MacGNU</h1>
+
+<p align="center">
+<a href="https://shinokada.github.io/macgnu/">MacGNU</a>
+</p>
+
+<p align="center">
+<a href="https://twitter.com/shinokada" rel="nofollow"><img src="https://img.shields.io/badge/created%20by-@shinokada-4BBAAB.svg" alt="Created by Shin Okada"></a>
+<a href="https://opensource.org/licenses/MIT" rel="nofollow"><img src="https://img.shields.io/github/license/shinokada/macgnu" alt="License"></a>
+</p>
 
 Macgnu is a [linuxify](https://github.com/fabiomaia/linuxify) alternative.
 
