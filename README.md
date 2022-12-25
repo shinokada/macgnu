@@ -1,7 +1,7 @@
 <h1 align="center">MacGNU</h1>
 
 <p align="center">
-<a href="https://shinokada.github.io/macgnu/">MacGNU</a>
+<a href="https://macgnu.codewithshin.com/">MacGNU</a>
 </p>
 
 <p align="center">
