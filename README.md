@@ -40,7 +40,9 @@ awesome install shinokada/macgnu
 macgnu install
 ```
 
-After installation, add following to your terminal configuration `~/.zshrc` or `~/.bashrc`
+After installation, create `~/.macgnu` and copy [.macgnu](https://github.com/shinokada/macgnu/blob/main/.macgnu).
+
+Add following to your terminal configuration `~/.zshrc` or `~/.bashrc`
 
 ```zsh
 # ~/.zshrc
