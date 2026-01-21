@@ -1,0 +1,24 @@
+# MacGNU Configuration File
+# 
+# Copy this file to ~/.macgnu.conf and customize it to skip packages
+# you don't want to install.
+#
+# Example: Skip bash and emacs
+# MACGNU_SKIP_PACKAGES="bash emacs"
+
+# Space-separated list of packages to skip during installation
+# MACGNU_SKIP_PACKAGES=""
+
+# Example configurations:
+
+# Skip bash if you're happy with your current version
+# MACGNU_SKIP_PACKAGES="bash"
+
+# Skip multiple packages
+# MACGNU_SKIP_PACKAGES="bash emacs nano"
+
+# Skip all gnu-prefixed packages
+# MACGNU_SKIP_PACKAGES="gnu-indent gnu-sed gnu-tar gnu-which"
+
+# Don't skip anything (default behavior)
+MACGNU_SKIP_PACKAGES=""

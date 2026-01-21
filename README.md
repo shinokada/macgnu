@@ -44,9 +44,11 @@ awesome install shinokada/macgnu
 macgnu install
 ```
 
+Create `~/.macgnu.conf` to customize which packages are installed (optional). See [Configuration Guide](docs/CONFIGURATION.md) for details.
+
 After installation, create `~/.macgnu` and copy [.macgnu](https://github.com/shinokada/macgnu/blob/main/.macgnu).
 
-Add following to your terminal configuration `~/.zshrc` or `~/.bashrc`
+Add the following to your terminal configuration `~/.zshrc` or `~/.bashrc`
 
 ```zsh
 # ~/.zshrc
@@ -58,11 +60,43 @@ Add following to your terminal configuration `~/.zshrc` or `~/.bashrc`
 . ~/.macgnu
 ```
 
-If you are using iTerm you may need to add following to `~/.bash_profile`:
+If you are using iTerm you may need to add the following to `~/.bash_profile`:
 
 ```bash
 . ~/.bashrc
 ```
+
+## Documentation
+
+- [Quick Start & Installation](docs/INSTALLATION.md) - Setup guide with examples
+- [New Features (v0.3.0+)](docs/FEATURES.md) - All new features and usage
+- [Configuration Guide](docs/CONFIGURATION.md) - How to customize package selection
+
+## Available Commands
+
+```bash
+macgnu install          # Install all GNU packages (respects config)
+macgnu install pkg      # Install a specific package
+macgnu uninstall        # Uninstall all GNU packages
+macgnu status           # Show installation status of all packages
+macgnu info             # Show info on GNU packages
+macgnu -h               # Show help message
+macgnu -v               # Show version
+
+# Flags
+--dry-run               # Preview changes without applying them
+--force                 # Force reinstall/upgrade packages
+```
+
+## Configuration
+
+Skip packages you don't want by creating `~/.macgnu.conf`:
+
+```bash
+MACGNU_SKIP_PACKAGES="bash emacs nano"
+```
+
+See [Configuration Guide](docs/CONFIGURATION.md) for complete details.
 
 ## Uninstalling GNUs
 
@@ -102,6 +136,42 @@ Changing shell for shinokada.
 Password for shinokada:
 # Open a new tab or restart your terminal
 ```
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+# Full test suite
+bash tests/run_tests.sh
+
+# Unit tests only
+bash tests/unit_tests.sh
+```
+
+See [Testing Guide](tests/README.md) for details.
+
+## What's New in v0.3.0
+
+- ✅ Configuration file support (`~/.macgnu.conf`)
+- ✅ Status command to check installations
+- ✅ Selective package installation
+- ✅ Dry-run mode for preview
+- ✅ Force reinstall/upgrade flag
+- ✅ Progress feedback
+- ✅ Comprehensive test suite
+
+See [New Features](docs/FEATURES.md) for full details.
+
+### For v0.2.4 Users
+
+Upgrading from v0.2.4? See the [Migration Guide](updates/MIGRATION.md) for step-by-step instructions.
+
+### Resources
+
+- 📖 [Complete Implementation Guide](updates/README.md) - Technical details and implementation report
+- 🚀 [Quick Start Guide](IMPROVEMENTS.md) - Quick navigation for all user types
+- 📝 [Changelog](updates/CHANGELOG.md) - Detailed list of all changes
 
 ## List of packages installed
 
