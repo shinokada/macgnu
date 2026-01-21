@@ -134,7 +134,9 @@ macgnu_install() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
+    local -a filtered_formulas
+    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -183,7 +185,9 @@ macgnu_uninstall() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
+    local -a filtered_formulas
+    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -196,7 +200,10 @@ macgnu_uninstall() {
     fi
 
     # Remove gdb fix
-    [ -f ~/.gdbinit ] && sed -i.bak '/set startup-with-shell off/d' ~/.gdbinit && rm ~/.gdbinit.bak || true
+    if [ -f ~/.gdbinit ]; then
+        sed -i.bak '/set startup-with-shell off/d' ~/.gdbinit || true
+        rm -f ~/.gdbinit.bak || true
+    fi
 
     # Uninstall all formulas in reverse order
     local total=${#formulas[@]}
@@ -223,7 +230,9 @@ macgnu_info() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
+    local -a filtered_formulas
+    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -248,7 +257,9 @@ macgnu_status() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
+    local -a filtered_formulas
+    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
 
     echo "=== MacGNU Installation Status ==="
     echo ""
@@ -259,7 +270,8 @@ macgnu_status() {
     for ((i = 0; i < ${#formulas[@]}; i++)); do
         local formula="${formulas[i]}"
         if brew ls --versions "$formula" >/dev/null 2>&1; then
-            local version=$(brew list --versions "$formula" 2>/dev/null | awk '{print $NF}')
+            local version
+            version=$(brew list --versions "$formula" 2>/dev/null | awk '{print $NF}')
             echo "✓ $formula ($version)"
             ((installed++))
         else
