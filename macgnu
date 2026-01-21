@@ -86,7 +86,12 @@ macgnu_print_progress() {
     local total=$2
     [[ $total -eq 0 ]] && return
     local percent=$((current * 100 / total))
-    printf "Progress: [%-50s] %d%%\r" "$(printf '#%.0s' $(seq 1 $((percent / 2))))" "$percent"
+    local filled=$((percent / 2))
+    local bar=""
+    if ((filled > 0)); then
+        bar=$(printf '#%.0s' $(seq 1 "$filled"))
+    fi
+    printf "Progress: [%-50s] %d%%\r" "$bar" "$percent"
 }
 
 #################
@@ -415,6 +420,7 @@ macgnu_main() {
     local pkg=""
     local show_help=false
     local show_version=false
+    local invalid_args=false
 
     for arg in "$@"; do
         case "$arg" in
@@ -437,16 +443,19 @@ macgnu_main() {
             # Unrecognized flag
             echo "Warning: Unrecognized flag '$arg'" >&2
             echo "Run 'macgnu --help' to see available options" >&2
+            invalid_args=true
             ;;
         *)
             # Check if it's a package name for install command
             if [[ -z "$cmd" ]]; then
                 echo "Warning: Unrecognized command '$arg'" >&2
                 cmd="help"
+                invalid_args=true
             elif [[ "$cmd" == "install" ]] && [[ -z "$pkg" ]]; then
                 pkg="$arg"
             else
                 echo "Warning: Unexpected argument '$arg'" >&2
+                invalid_args=true
             fi
             ;;
         esac
@@ -457,6 +466,11 @@ macgnu_main() {
         cmd="help"
     elif [[ "$show_version" == true ]]; then
         cmd="version"
+    fi
+
+    if [[ "$invalid_args" == true && "$show_help" != true && "$show_version" != true ]]; then
+        macgnu_help >&2
+        exit 1
     fi
 
     case "$cmd" in
