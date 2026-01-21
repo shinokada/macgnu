@@ -50,7 +50,7 @@ The test suite covers:
 
 Successful tests show checkmarks:
 
-```
+```text
 ✓ Help command output
 ✓ Version command
 ✓ Invalid command handling
@@ -59,7 +59,7 @@ Successful tests show checkmarks:
 
 Failed tests show crosses with details:
 
-```
+```text
 ✗ Some test name
   Expected: value1
   Actual:   value2
@@ -69,7 +69,7 @@ Failed tests show crosses with details:
 
 After all tests, you'll see a summary:
 
-```
+```text
 ================================
 Test Summary
 ================================
@@ -98,7 +98,7 @@ rm ~/.macgnu.conf
 ## Requirements
 
 - macOS (tests check for this)
-- bash 4.0+
+- bash 3.2+ (compatible with macOS default bash)
 - Homebrew installed (for some tests)
 
 ## Troubleshooting

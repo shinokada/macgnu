@@ -170,8 +170,7 @@ Upgrading from v0.2.4? See the [Migration Guide](updates/MIGRATION.md) for step-
 ### Resources
 
 - 📖 [Complete Implementation Guide](updates/README.md) - Technical details and implementation report
-- 🚀 [Quick Start Guide](IMPROVEMENTS.md) - Quick navigation for all user types
-- 📝 [Changelog](updates/CHANGELOG.md) - Detailed list of all changes
+-  [Changelog](updates/CHANGELOG.md) - Detailed list of all changes
 
 ## List of packages installed
 

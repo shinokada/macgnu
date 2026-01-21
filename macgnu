@@ -40,40 +40,44 @@ macgnu_check_dirs() {
 
 # Load config file and override formulas
 macgnu_load_config() {
+    local env_skip="${MACGNU_SKIP_PACKAGES:-}"
     if [[ -f "$CONFIG_FILE" ]]; then
         # Source the config file which should define MACGNU_SKIP_PACKAGES
         # shellcheck source=/dev/null
         source "$CONFIG_FILE"
     fi
+    # Environment variable takes precedence over config file
+    if [[ -n "${env_skip:-}" ]]; then
+        MACGNU_SKIP_PACKAGES="$env_skip"
+    fi
 }
 
-# Filter formulas based on skip list
+# Filter formulas based on skip list (Bash 3.2 compatible)
 macgnu_filter_formulas() {
-    local -n arr=$1
     local skip_packages="${MACGNU_SKIP_PACKAGES:-}"
 
     if [[ -z "$skip_packages" ]]; then
+        printf '%s\n' "$@"
         return
     fi
 
-    local skip_array=($skip_packages)
-    local filtered=()
+    local -a skip_array
+    IFS=' ' read -r -a skip_array <<<"$skip_packages"
+    local -a filtered
+    local formula skip should_skip
 
-    for formula in "${arr[@]}"; do
-        local should_skip=false
+    for formula in "$@"; do
+        should_skip=false
         for skip in "${skip_array[@]}"; do
             if [[ "$formula" == "$skip" ]]; then
                 should_skip=true
                 break
             fi
         done
-
-        if [[ "$should_skip" == false ]]; then
-            filtered+=("$formula")
-        fi
+        [[ "$should_skip" == false ]] && filtered+=("$formula")
     done
 
-    arr=("${filtered[@]}")
+    printf '%s\n' "${filtered[@]}"
 }
 
 macgnu_print_progress() {
@@ -130,7 +134,7 @@ macgnu_install() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    macgnu_filter_formulas formulas
+    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -183,7 +187,7 @@ macgnu_uninstall() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    macgnu_filter_formulas formulas
+    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -223,7 +227,7 @@ macgnu_info() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    macgnu_filter_formulas formulas
+    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "=== DRY RUN MODE ==="
@@ -248,7 +252,7 @@ macgnu_status() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    macgnu_filter_formulas formulas
+    formulas=($(macgnu_filter_formulas "${formulas[@]}"))
 
     echo "=== MacGNU Installation Status ==="
     echo ""
@@ -383,6 +387,8 @@ macgnu_main() {
     # Parse flags
     local cmd=""
     local pkg=""
+    local show_help=false
+    local show_version=false
 
     for arg in "$@"; do
         case "$arg" in
@@ -393,10 +399,10 @@ macgnu_main() {
             FORCE_INSTALL=true
             ;;
         -h | --help)
-            cmd="help"
+            show_help=true
             ;;
         -v | --version)
-            cmd="version"
+            show_version=true
             ;;
         install | uninstall | info | status)
             cmd="$arg"
@@ -411,6 +417,13 @@ macgnu_main() {
             ;;
         esac
     done
+
+    # Help and version flags take precedence
+    if [[ "$show_help" == true ]]; then
+        cmd="help"
+    elif [[ "$show_version" == true ]]; then
+        cmd="version"
+    fi
 
     case "$cmd" in
     install)
@@ -442,4 +455,7 @@ macgnu_main() {
     esac
 }
 
-macgnu_main "$@"
+# Only execute main if script is being run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    macgnu_main "$@"
+fi

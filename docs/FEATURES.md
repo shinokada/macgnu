@@ -71,7 +71,7 @@ macgnu install --force --dry-run
 
 Installation now shows a progress bar:
 
-```
+```text
 Installing 36 GNU packages...
 Progress: [#########################                         ] 50%
 ✓ Installation complete

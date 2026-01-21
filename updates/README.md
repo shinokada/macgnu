@@ -46,7 +46,7 @@ MacGNU has been successfully upgraded from v0.2.4 to v0.3.0 with significant imp
 
 ### 📁 Directory Structure Created
 
-```
+```text
 macgnu/
 ├── docs/                          # User documentation
 │   ├── INSTALLATION.md            # Setup guide with examples

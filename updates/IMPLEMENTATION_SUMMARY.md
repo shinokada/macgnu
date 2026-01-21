@@ -127,7 +127,7 @@ Updated sections:
 
 ## Directory Structure
 
-```
+```text
 macgnu/
 ├── macgnu                          # Updated main script (v0.3.0)
 ├── .macgnu.conf.example            # NEW: Config file template

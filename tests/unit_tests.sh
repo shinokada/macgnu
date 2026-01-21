@@ -3,10 +3,10 @@
 # MacGNU Unit Tests - Flag Parsing
 # Tests for argument and flag parsing logic
 
-set -euo pipefail
+# Don't use pipefail or errexit for tests - we want to continue on failures
+set -u
 
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$TEST_DIR")"
 
 # Colors
 RED='\033[0;31m'
