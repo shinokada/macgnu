@@ -53,6 +53,7 @@ macgnu_load_config() {
 }
 
 # Filter formulas based on skip list (Bash 3.2 compatible)
+# Note: We use 'while read' instead of 'mapfile' for Bash 3.2 compatibility (macOS default)
 macgnu_filter_formulas() {
     local skip_packages="${MACGNU_SKIP_PACKAGES:-}"
 
@@ -136,7 +137,9 @@ macgnu_install() {
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
     local -a filtered_formulas
-    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
     formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -195,7 +198,9 @@ macgnu_uninstall() {
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
     local -a filtered_formulas
-    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
     formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -240,7 +245,9 @@ macgnu_info() {
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
     local -a filtered_formulas
-    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
     formulas=("${filtered_formulas[@]}")
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -267,7 +274,9 @@ macgnu_status() {
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
     local -a filtered_formulas
-    mapfile -t filtered_formulas < <(macgnu_filter_formulas "${formulas[@]}")
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
     formulas=("${filtered_formulas[@]}")
 
     echo "=== MacGNU Installation Status ==="

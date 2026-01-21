@@ -45,7 +45,8 @@ jobs:
           sw_vers
           echo ""
           echo "Bash version:"
-          bash --version
+          bash --version | head -1
+          echo "Bash path: $(which bash)"
           echo ""
           echo "Homebrew version:"
           brew --version
