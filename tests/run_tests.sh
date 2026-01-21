@@ -315,13 +315,8 @@ main() {
   test_readme_exists
   test_license_exists
 
-  # Conditional tests (require brew)
-  if command -v brew >/dev/null 2>&1; then
-    test_status_command
-  else
-    echo ""
-    echo -e "${YELLOW}Note: Some tests skipped - Homebrew not installed${NC}"
-  fi
+  # Tests that may skip if brew is not installed
+  test_status_command
 
   # Print summary
   test_summary

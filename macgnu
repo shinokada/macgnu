@@ -83,6 +83,7 @@ macgnu_filter_formulas() {
 macgnu_print_progress() {
     local current=$1
     local total=$2
+    [[ $total -eq 0 ]] && return
     local percent=$((current * 100 / total))
     printf "Progress: [%-50s] %d%%\r" "$(printf '#%.0s' $(seq 1 $((percent / 2))))" "$percent"
 }
@@ -167,9 +168,17 @@ macgnu_install() {
     echo "" # newline after progress bar
     echo "✓ Installation complete"
 
+    # Get the directory where the script is located
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
     # Make changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
-    cp .macgnu ~/.macgnu
-    echo "✓ Added '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+    if [[ -f "$script_dir/.macgnu" ]]; then
+        cp "$script_dir/.macgnu" ~/.macgnu
+        echo "✓ Added '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+    else
+        echo "Warning: .macgnu file not found in script directory"
+    fi
 
     # Suggest creating config file if it doesn't exist
     if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -272,7 +281,7 @@ macgnu_status() {
         if brew ls --versions "$formula" >/dev/null 2>&1; then
             local version
             version=$(brew list --versions "$formula" 2>/dev/null | awk '{print $NF}')
-            echo "✓ $formula ($version)"
+            echo "✓ $formula (${version:-unknown})"
             ((installed++))
         else
             echo "✗ $formula"
@@ -415,12 +424,20 @@ macgnu_main() {
         install | uninstall | info | status)
             cmd="$arg"
             ;;
+        --*)
+            # Unrecognized flag
+            echo "Warning: Unrecognized flag '$arg'" >&2
+            echo "Run 'macgnu --help' to see available options" >&2
+            ;;
         *)
             # Check if it's a package name for install command
             if [[ -z "$cmd" ]]; then
+                echo "Warning: Unrecognized command '$arg'" >&2
                 cmd="help"
             elif [[ "$cmd" == "install" ]] && [[ -z "$pkg" ]]; then
                 pkg="$arg"
+            else
+                echo "Warning: Unexpected argument '$arg'" >&2
             fi
             ;;
         esac
