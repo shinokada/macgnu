@@ -6,8 +6,6 @@
 # Don't use pipefail or errexit for tests - we want to continue on failures
 set -u
 
-TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,7 +14,7 @@ NC='\033[0m'
 TESTS=0
 PASSED=0
 
-test() {
+run_test() {
   local name="$1"
   local expected="$2"
   local actual="$3"
@@ -55,10 +53,10 @@ test_flags() {
   echo "$DRY_RUN:$FORCE_INSTALL"
 }
 
-test "No flags" "false:false" "$(test_flags)"
-test "Dry-run flag" "true:false" "$(test_flags --dry-run)"
-test "Force flag" "false:true" "$(test_flags --force)"
-test "Both flags" "true:true" "$(test_flags --dry-run --force)"
+run_test "No flags" "false:false" "$(test_flags)"
+run_test "Dry-run flag" "true:false" "$(test_flags --dry-run)"
+run_test "Force flag" "false:true" "$(test_flags --force)"
+run_test "Both flags" "true:true" "$(test_flags --dry-run --force)"
 
 # Test command parsing
 echo ""
@@ -79,11 +77,11 @@ test_command() {
   echo "$cmd"
 }
 
-test "Install command" "install" "$(test_command install)"
-test "Uninstall command" "uninstall" "$(test_command uninstall)"
-test "Status command" "status" "$(test_command status)"
-test "Info command" "info" "$(test_command info)"
-test "No command" "" "$(test_command)"
+run_test "Install command" "install" "$(test_command install)"
+run_test "Uninstall command" "uninstall" "$(test_command uninstall)"
+run_test "Status command" "status" "$(test_command status)"
+run_test "Info command" "info" "$(test_command info)"
+run_test "No command" "" "$(test_command)"
 
 # Summary
 echo ""

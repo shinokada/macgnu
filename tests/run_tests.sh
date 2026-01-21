@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
+TESTS_SKIPPED=0
 
 # Test directory
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -109,6 +110,9 @@ test_summary() {
   echo "Total:  $TESTS_RUN"
   echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
   echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
+  if [[ $TESTS_SKIPPED -gt 0 ]]; then
+    echo -e "Skipped: ${YELLOW}$TESTS_SKIPPED${NC}"
+  fi
   echo "================================"
 
   if [[ $TESTS_FAILED -eq 0 ]]; then
@@ -235,7 +239,7 @@ test_status_command() {
     fi
   else
     echo -e "${YELLOW}⊘${NC} Skipping - brew not installed"
-    ((TESTS_RUN++))
+    ((TESTS_SKIPPED++))
   fi
 }
 
@@ -279,7 +283,7 @@ test_license_exists() {
     pass "LICENSE exists"
   else
     echo -e "${YELLOW}⊘${NC} LICENSE doesn't exist (optional)"
-    ((TESTS_RUN++))
+    ((TESTS_SKIPPED++))
   fi
 }
 
