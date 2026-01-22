@@ -312,7 +312,7 @@ macgnu_status() {
 
 # Install a single package
 macgnu_install_package() {
-    local package=$1
+    local package="${1-}"
     macgnu_check_os
     macgnu_check_brew
     macgnu_check_dirs
