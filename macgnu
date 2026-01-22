@@ -64,7 +64,7 @@ macgnu_filter_formulas() {
 
     local -a skip_array
     IFS=' ' read -r -a skip_array <<<"$skip_packages"
-    local -a filtered
+    local -a filtered=()
     local formula skip should_skip
 
     for formula in "$@"; do
@@ -141,7 +141,7 @@ macgnu_install() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    local -a filtered_formulas
+    local -a filtered_formulas=()
     while IFS= read -r formula; do
         filtered_formulas+=("$formula")
     done < <(macgnu_filter_formulas "${formulas[@]}")
@@ -202,7 +202,7 @@ macgnu_uninstall() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    local -a filtered_formulas
+    local -a filtered_formulas=()
     while IFS= read -r formula; do
         filtered_formulas+=("$formula")
     done < <(macgnu_filter_formulas "${formulas[@]}")
@@ -249,7 +249,7 @@ macgnu_info() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    local -a filtered_formulas
+    local -a filtered_formulas=()
     while IFS= read -r formula; do
         filtered_formulas+=("$formula")
     done < <(macgnu_filter_formulas "${formulas[@]}")
@@ -278,7 +278,7 @@ macgnu_status() {
 
     local formulas=("${macgnu_formulas[@]}")
     macgnu_load_config
-    local -a filtered_formulas
+    local -a filtered_formulas=()
     while IFS= read -r formula; do
         filtered_formulas+=("$formula")
     done < <(macgnu_filter_formulas "${formulas[@]}")
