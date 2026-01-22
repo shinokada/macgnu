@@ -15,7 +15,7 @@ CONFIG_FILE="${HOME}/.macgnu.conf"
 macgnu_check_os() {
     if ! [[ "$OSTYPE" =~ darwin* ]]; then
         echo "This is meant to be run on macOS only"
-        exit
+        exit 1
     fi
 }
 
@@ -23,12 +23,12 @@ macgnu_check_brew() {
     if ! command -v brew >/dev/null; then
         echo "Homebrew not installed!"
         echo "In order to use this script please install homebrew from https://brew.sh"
-        exit
+        exit 1
     fi
 }
 
 macgnu_check_dirs() {
-    result=0
+    local result=0
     for dir in $(brew --prefix)/bin $(brew --prefix)/sbin; do
         if [[ ! -d $dir || ! -w $dir ]]; then
             echo "$dir must exist and be writeable"
