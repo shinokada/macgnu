@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+  pull_request:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run shellcheck
+        run: |
+          shellcheck --version
+          shellcheck macgnu tests/*.sh
+
+  test:
+    name: Test on macOS ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show environment info
+        run: |
+          echo "macOS version:"
+          sw_vers
+          echo ""
+          echo "Bash version:"
+          bash --version | head -1
+          echo "Bash path: $(which bash)"
+          echo ""
+          echo "Homebrew version:"
+          brew --version
+
+      - name: Make test scripts executable
+        run: |
+          chmod +x tests/*.sh
+          chmod +x macgnu
+
+      - name: Run unit tests
+        run: |
+          echo "Running unit tests..."
+          ./tests/unit_tests.sh
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests..."
+          ./tests/run_tests.sh
+
+      - name: Test dry-run install
+        run: |
+          echo "Testing dry-run install..."
+          ./macgnu install --dry-run
+
+      - name: Test dry-run uninstall
+        run: |
+          echo "Testing dry-run uninstall..."
+          ./macgnu uninstall --dry-run
+
+      - name: Test status command
+        run: |
+          echo "Testing status command..."
+          ./macgnu status
+
+      - name: Test help command
+        run: |
+          echo "Testing help command..."
+          ./macgnu --help
+
+      - name: Test version command
+        run: |
+          echo "Testing version command..."
+          ./macgnu --version

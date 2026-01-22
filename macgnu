@@ -5,13 +5,17 @@
 # set -o pipefail setting prevents errors in a pipeline from being masked.
 set -euo pipefail
 
-version="0.2.4"
+version="0.3.0"
+DRY_RUN=false
+FORCE_INSTALL=false
+CONFIG_FILE="${HOME}/.macgnu.conf"
+
 ######### functions ###########
 
 macgnu_check_os() {
     if ! [[ "$OSTYPE" =~ darwin* ]]; then
         echo "This is meant to be run on macOS only"
-        exit
+        exit 1
     fi
 }
 
@@ -19,12 +23,12 @@ macgnu_check_brew() {
     if ! command -v brew >/dev/null; then
         echo "Homebrew not installed!"
         echo "In order to use this script please install homebrew from https://brew.sh"
-        exit
+        exit 1
     fi
 }
 
 macgnu_check_dirs() {
-    result=0
+    local result=0
     for dir in $(brew --prefix)/bin $(brew --prefix)/sbin; do
         if [[ ! -d $dir || ! -w $dir ]]; then
             echo "$dir must exist and be writeable"
@@ -32,6 +36,62 @@ macgnu_check_dirs() {
         fi
     done
     return $result
+}
+
+# Load config file and override formulas
+macgnu_load_config() {
+    local env_skip="${MACGNU_SKIP_PACKAGES:-}"
+    if [[ -f "$CONFIG_FILE" ]]; then
+        # Source the config file which should define MACGNU_SKIP_PACKAGES
+        # shellcheck source=/dev/null
+        source "$CONFIG_FILE"
+    fi
+    # Environment variable takes precedence over config file
+    if [[ -n "${env_skip:-}" ]]; then
+        MACGNU_SKIP_PACKAGES="$env_skip"
+    fi
+}
+
+# Filter formulas based on skip list (Bash 3.2 compatible)
+# Note: We use 'while read' instead of 'mapfile' for Bash 3.2 compatibility (macOS default)
+macgnu_filter_formulas() {
+    local skip_packages="${MACGNU_SKIP_PACKAGES:-}"
+
+    if [[ -z "$skip_packages" ]]; then
+        printf '%s\n' "$@"
+        return
+    fi
+
+    local -a skip_array
+    IFS=' ' read -r -a skip_array <<<"$skip_packages"
+    local -a filtered=()
+    local formula skip should_skip
+
+    for formula in "$@"; do
+        should_skip=false
+        for skip in "${skip_array[@]}"; do
+            if [[ "$formula" == "$skip" ]]; then
+                should_skip=true
+                break
+            fi
+        done
+        [[ "$should_skip" == false ]] && filtered+=("$formula")
+    done
+
+    printf '%s\n' "${filtered[@]}"
+}
+
+macgnu_print_progress() {
+    local current=$1
+    local total=$2
+    [[ $total -eq 0 ]] && return
+    local percent=$((current * 100 / total))
+    local filled=$((percent / 2))
+    local bar=""
+    if ((filled > 0)); then
+        bar=$(printf '#%.0s' $(seq 1 "$filled"))
+    fi
+    printf "Progress: [%-50s] %d%%\r" "$bar" "$percent"
 }
 
 #################
@@ -79,50 +139,221 @@ macgnu_install() {
     macgnu_check_brew
     macgnu_check_dirs
 
+    local formulas=("${macgnu_formulas[@]}")
+    macgnu_load_config
+    local -a filtered_formulas=()
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "=== DRY RUN MODE ==="
+        echo "The following packages would be installed:"
+        for ((i = 0; i < ${#formulas[@]}; i++)); do
+            echo "  - ${formulas[i]}"
+        done
+        echo "=== END DRY RUN ==="
+        return
+    fi
+
+    local total=${#formulas[@]}
+
+    echo "Installing ${total} GNU packages..."
+
     # Install all formulas
-    for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
-        if ! brew ls --versions "${macgnu_formulas[i]}" >/dev/null; then
-            brew install "${macgnu_formulas[i]}"
+    for ((i = 0; i < total; i++)); do
+        local formula="${formulas[i]}"
+        macgnu_print_progress $((i + 1)) "$total"
+
+        if ! brew ls --versions "$formula" >/dev/null 2>&1; then
+            brew install "$formula" >/dev/null 2>&1 || true
+        elif [[ "$FORCE_INSTALL" == true ]]; then
+            brew upgrade "$formula" >/dev/null 2>&1 || true
         fi
     done
 
-    # gdb requires special privileges to access Mach ports.
-    # One can either codesign the binary as per https://sourceware.org/gdb/wiki/BuildingOnDarwin
-    # Or, on 10.12 Sierra or later with SIP, declare `set startup-with-shell off` in `~/.gdbinit`:
-    # grep -qF 'set startup-with-shell off' ~/.gdbinit || echo 'set startup-with-shell off' | tee -a ~/.gdbinit >/dev/null
+    echo "" # newline after progress bar
+    echo "✓ Installation complete"
+
+    # Get the directory where the script is located
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     # Make changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
-    cp .macgnu ~/.macgnu
-    echo "Add '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+    if [[ -f "$script_dir/.macgnu" ]]; then
+        cp "$script_dir/.macgnu" ~/.macgnu
+        echo "✓ Copied .macgnu to ~/.macgnu"
+        echo "Add '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc, or equivalent config file"
+    else
+        echo "Warning: .macgnu file not found in script directory"
+    fi
+
+    # Suggest creating config file if it doesn't exist
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo ""
+        echo "To customize which packages are installed, create $CONFIG_FILE"
+        echo "See: https://github.com/shinokada/macgnu#configuration"
+    fi
 }
 
 macgnu_uninstall() {
     macgnu_check_os
     macgnu_check_brew
 
+    local formulas=("${macgnu_formulas[@]}")
+    macgnu_load_config
+    local -a filtered_formulas=()
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "=== DRY RUN MODE ==="
+        echo "The following packages would be uninstalled:"
+        for ((i = 0; i < ${#formulas[@]}; i++)); do
+            echo "  - ${formulas[i]}"
+        done
+        echo "=== END DRY RUN ==="
+        return
+    fi
+
     # Remove gdb fix
-    [ -f ~/.gdbinit ] && sed -i.bak '/set startup-with-shell off/d' ~/.gdbinit && rm ~/.gdbinit.bak
+    if [ -f ~/.gdbinit ]; then
+        sed -i.bak '/set startup-with-shell off/d' ~/.gdbinit || true
+        rm -f ~/.gdbinit.bak || true
+    fi
 
     # Uninstall all formulas in reverse order
-    for ((i = ${#macgnu_formulas[@]} - 1; i >= 0; i--)); do
-        if [[ ${macgnu_formulas[i]} != bash ]]; then
-            brew uninstall -f "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)"
+    local total=${#formulas[@]}
+    for ((i = total - 1; i >= 0; i--)); do
+        macgnu_print_progress $((total - i)) "$total"
+
+        local formula="${formulas[i]}"
+        if [[ "$formula" != bash ]]; then
+            brew uninstall -f "$(echo "$formula" | cut -d ' ' -f1)" >/dev/null 2>&1 || true
         fi
     done
 
+    echo "" # newline after progress bar
+    echo "✓ Uninstall complete"
+
     # Remove changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
     rm -f ~/.macgnu
-    echo "Remove '. ~/.macgnu' from your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+    echo "✓ Removed '. ~/.macgnu' from your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
 }
 
 macgnu_info() {
     macgnu_check_os
     macgnu_check_brew
 
-    for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
-        brew info "$(echo "${macgnu_formulas[i]}" | cut -d ' ' -f1)"
+    local formulas=("${macgnu_formulas[@]}")
+    macgnu_load_config
+    local -a filtered_formulas=()
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "=== DRY RUN MODE ==="
+        echo "Would show info for:"
+        for ((i = 0; i < ${#formulas[@]}; i++)); do
+            echo "  - ${formulas[i]}"
+        done
+        echo "=== END DRY RUN ==="
+        return
+    fi
+
+    for ((i = 0; i < ${#formulas[@]}; i++)); do
+        brew info "$(echo "${formulas[i]}" | cut -d ' ' -f1)"
         printf "\n\n========================\n\n"
     done
+}
+
+# Show status of installed packages
+macgnu_status() {
+    macgnu_check_os
+    macgnu_check_brew
+
+    local formulas=("${macgnu_formulas[@]}")
+    macgnu_load_config
+    local -a filtered_formulas=()
+    while IFS= read -r formula; do
+        filtered_formulas+=("$formula")
+    done < <(macgnu_filter_formulas "${formulas[@]}")
+    formulas=("${filtered_formulas[@]}")
+
+    echo "=== MacGNU Installation Status ==="
+    echo ""
+
+    local installed=0
+    local not_installed=0
+
+    for ((i = 0; i < ${#formulas[@]}; i++)); do
+        local formula="${formulas[i]}"
+        if brew ls --versions "$formula" >/dev/null 2>&1; then
+            local version
+            version=$(brew list --versions "$formula" 2>/dev/null | awk '{print $NF}')
+            echo "✓ $formula (${version:-unknown})"
+            ((++installed))
+        else
+            echo "✗ $formula"
+            ((++not_installed))
+        fi
+    done
+
+    echo ""
+    echo "Installed: $installed / ${#formulas[@]}"
+    if [[ $not_installed -gt 0 ]]; then
+        echo "Not installed: $not_installed"
+    fi
+}
+
+# Install a single package
+macgnu_install_package() {
+    local package="${1-}"
+    macgnu_check_os
+    macgnu_check_brew
+    macgnu_check_dirs
+
+    if [[ -z "$package" ]]; then
+        echo "Error: Please specify a package name"
+        exit 1
+    fi
+
+    # Check if package is in our list
+    local found=false
+    for formula in "${macgnu_formulas[@]}"; do
+        if [[ "$formula" == "$package" ]]; then
+            found=true
+            break
+        fi
+    done
+
+    if [[ "$found" == false ]]; then
+        echo "Error: Package '$package' is not in MacGNU package list"
+        exit 1
+    fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "Would install: $package"
+        return
+    fi
+
+    if brew ls --versions "$package" >/dev/null 2>&1; then
+        if [[ "$FORCE_INSTALL" == true ]]; then
+            echo "Upgrading $package..."
+            brew upgrade "$package"
+        else
+            echo "$package is already installed"
+            exit 0
+        fi
+    else
+        echo "Installing $package..."
+        brew install "$package"
+    fi
 }
 
 macgnu_help() {
@@ -130,16 +361,35 @@ macgnu_help() {
 Description: Macgnu transforms the macOS CLI into 
 GNU/Linux by installing GNU programs.
 
-Usage and options: macgnu [command | -h | -v]
-    install        installs GNU/Linux utilities
-    uninstall      uninstalls GNU/Linux utilities
-    info           shows info on GNU/Linux utilities
-    -h, --help     shows this help message and exit"
-    -v, --version  shows the version
+Usage and options: macgnu [command | -h | -v] [flags]
+
+Commands:
+    install [pkg]      installs GNU/Linux utilities (or specific pkg)
+    uninstall          uninstalls GNU/Linux utilities
+    status             shows installation status of all packages
+    info               shows info on GNU/Linux utilities
+    -h, --help         shows this help message and exit
+    -v, --version      shows the version
+
+Flags:
+    --dry-run          preview changes without making them
+    --force            force reinstall/upgrade packages
 
 Examples:
-    Install GNUs
+    Install all GNUs
     macgnu install
+
+    Install all GNUs (preview only)
+    macgnu install --dry-run
+
+    Install a specific package
+    macgnu install bash
+
+    Force upgrade all packages
+    macgnu install --force
+
+    Show installation status
+    macgnu status
 
     Uninstall GNUs
     macgnu uninstall
@@ -154,25 +404,107 @@ Examples:
     macgnu -v
 EOF
     echo
-    echo "GNU programs to be installed: "
+    echo "GNU programs to be installed:"
+    echo ""
     for ((i = 0; i < ${#macgnu_formulas[@]}; i++)); do
         echo "${macgnu_formulas[i]}"
     done | column
+
+    echo ""
+    echo "To customize installed packages, create ~/.macgnu.conf"
+    echo "See: https://github.com/shinokada/macgnu#configuration"
 }
 
 macgnu_main() {
-    if [ $# -eq 1 ]; then
-        case $1 in
-        install) macgnu_install ;;
-        uninstall) macgnu_uninstall ;;
-        info) macgnu_info ;;
-        -h | --help) macgnu_help ;;
-        -v | --version) echo "$version" ;;
+    # Parse flags
+    local cmd=""
+    local pkg=""
+    local show_help=false
+    local show_version=false
+    local invalid_args=false
+
+    for arg in "$@"; do
+        case "$arg" in
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        --force)
+            FORCE_INSTALL=true
+            ;;
+        -h | --help)
+            show_help=true
+            ;;
+        -v | --version)
+            show_version=true
+            ;;
+        install | uninstall | info | status)
+            cmd="$arg"
+            ;;
+        --*)
+            # Unrecognized flag
+            echo "Warning: Unrecognized flag '$arg'" >&2
+            echo "Run 'macgnu --help' to see available options" >&2
+            invalid_args=true
+            ;;
+        *)
+            # Check if it's a package name for install command
+            if [[ -z "$cmd" ]]; then
+                echo "Warning: Unrecognized command '$arg'" >&2
+                cmd="help"
+                invalid_args=true
+            elif [[ "$cmd" == "install" ]] && [[ -z "$pkg" ]]; then
+                pkg="$arg"
+            else
+                echo "Warning: Unexpected argument '$arg'" >&2
+                invalid_args=true
+            fi
+            ;;
         esac
-    else
-        macgnu_help
-        exit
+    done
+
+    # Help and version flags take precedence
+    if [[ "$show_help" == true ]]; then
+        cmd="help"
+    elif [[ "$show_version" == true ]]; then
+        cmd="version"
     fi
+
+    if [[ "$invalid_args" == true && "$show_help" != true && "$show_version" != true ]]; then
+        macgnu_help >&2
+        exit 1
+    fi
+
+    case "$cmd" in
+    install)
+        if [[ -z "$pkg" ]]; then
+            macgnu_install
+        else
+            macgnu_install_package "$pkg"
+        fi
+        ;;
+    uninstall)
+        macgnu_uninstall
+        ;;
+    status)
+        macgnu_status
+        ;;
+    info)
+        macgnu_info
+        ;;
+    help)
+        macgnu_help
+        ;;
+    version)
+        echo "$version"
+        ;;
+    *)
+        macgnu_help
+        exit 1
+        ;;
+    esac
 }
 
-macgnu_main "$@"
+# Only execute main if script is being run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    macgnu_main "$@"
+fi
