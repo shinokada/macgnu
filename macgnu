@@ -183,7 +183,8 @@ macgnu_install() {
     # Make changes to PATH/MANPATH/INFOPATH/LDFLAGS/CPPFLAGS
     if [[ -f "$script_dir/.macgnu" ]]; then
         cp "$script_dir/.macgnu" ~/.macgnu
-        echo "✓ Added '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc or your shell's equivalent config file"
+        echo "✓ Copied .macgnu to ~/.macgnu"
+        echo "Add '. ~/.macgnu' to your ~/.bashrc, ~/.zshrc, or equivalent config file"
     else
         echo "Warning: .macgnu file not found in script directory"
     fi
