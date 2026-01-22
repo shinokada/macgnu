@@ -296,10 +296,10 @@ macgnu_status() {
             local version
             version=$(brew list --versions "$formula" 2>/dev/null | awk '{print $NF}')
             echo "✓ $formula (${version:-unknown})"
-            ((installed++))
+            ((++installed))
         else
             echo "✗ $formula"
-            ((not_installed++))
+            ((++not_installed))
         fi
     done
 
